@@ -3,4 +3,4 @@ project(dsa_project C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(dsa_project main.c)
+add_executable(dsa_project src/main.c)
