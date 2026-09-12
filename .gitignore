@@ -1,6 +1,13 @@
+# CMake build output
+build/
+bin/
+
+# Binaries & Compiled files
 *.exe
 *.out
 *.o
 *.obj
+
+# VS Code & IDE settings
 .vscode/
-*.log
+.idea/
