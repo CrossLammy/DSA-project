@@ -82,6 +82,10 @@ int main()
             {
                 printf("Error: Please enter numbers only!\n");
             }
+            if (!exit)
+            {
+                break;
+            }
         }
 
         switch (choice)
@@ -108,8 +112,6 @@ int main()
             // code here
             break;
         case 0:
-            printf("%d\n", isEmpty(&printer)); // test
-            printf("%d\n", isFull(&printer));  // test
             printf("close done ~~~\n");
             break;
 
