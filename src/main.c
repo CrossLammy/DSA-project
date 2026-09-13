@@ -68,7 +68,7 @@ int main()
 
             fgets(input, sizeof(input), stdin); // input string
             choice = atoi(input);               // convert to number
-            if (choice >= 1 && choice <= 7)
+            if (choice >= 0 && choice <= 7)
             {
                 break;
             }
