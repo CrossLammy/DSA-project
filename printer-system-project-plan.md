@@ -74,7 +74,7 @@
 1. คิวเก็บงานได้สูงสุด 10 งาน
 2. งานที่เข้าคิวก่อนต้องพิมพ์ก่อน
 3. จำนวนหน้าต้องเป็นจำนวนเต็มมากกว่า 0
-4. ประเภทการพิมพ์มีเพียง `BW` และ `COLOR`
+4. ประเภทการพิมพ์ภายในระบบใช้ `bool isColor`: `false` = ขาวดำ และ `true` = สี
 5. งานขาวดำราคา 1 บาทต่อหน้า
 6. งานสีราคา 5 บาทต่อหน้า
 7. พิมพ์ 1 หน้า ใช้กระดาษ 1 แผ่น
@@ -99,14 +99,14 @@
 | -------------- | ---------- | ----------------- | ------------------- |
 | ชื่อไฟล์       | `char[]`   | `report.pdf`      | ต้องไม่ว่างและไม่เกิน 99 ตัวอักษร |
 | จำนวนหน้า      | `int`      | `10`              | ต้องมากกว่า 0       |
-| ประเภทการพิมพ์ | `int`      | `0` = BW, `1` = COLOR | ต้องเป็นค่าที่กำหนด |
+| ประเภทการพิมพ์ | ตัวเลือกจากเมนู | `1` = BW, `2` = COLOR | โปรแกรมแปลงเป็น `bool isColor` |
 
 เมื่อเติมทรัพยากร ระบบรับข้อมูลดังนี้
 
 | ข้อมูล             | ชนิดข้อมูล | เงื่อนไข             |
 | ------------------ | ---------- | -------------------- |
 | จำนวนกระดาษที่เติม | `int`      | ต้องมากกว่า 0        |
-| ประเภทหมึก         | `int`      | `0` = BLACK, `1` = COLOR |
+| ประเภทหมึก         | ตัวเลือกจากเมนู | `1` = BLACK, `2` = COLOR และแปลงเป็น `bool isColor` |
 | จำนวนหมึกที่เติม   | `int`      | ต้องมากกว่า 0        |
 
 ### 6.2 ผลลัพธ์
@@ -129,17 +129,17 @@
 เพื่อให้โปรแกรมอยู่ใน `main.c` เพียงไฟล์เดียว จะใช้ `struct PrinterSystem` เก็บสถานะทั้งหมด และใช้อาร์เรย์แบบ Parallel Arrays โดยข้อมูลที่อยู่ตำแหน่งเดียวกันถือเป็นงานเดียวกัน
 
 ```c
+#include <stdbool.h>
+
 #define MAX_SIZE 10
 #define MAX_FILENAME 100
-#define BW 0
-#define COLOR 1
 #define BW_PRICE 1.0
 #define COLOR_PRICE 5.0
 
 typedef struct {
     char fileName[MAX_SIZE][MAX_FILENAME];
     int pages[MAX_SIZE];
-    int printType[MAX_SIZE];
+    bool isColor[MAX_SIZE];
     double jobPrice[MAX_SIZE];
 
     int front;
@@ -154,25 +154,25 @@ typedef struct {
 } PrinterSystem;
 ```
 
-`fileName` เป็นอาร์เรย์อักขระ 2 มิติ เพราะภาษา C ไม่มีชนิด `string` โดยมิติแรกเก็บงาน 10 งาน และมิติที่สองเก็บชื่อไฟล์แต่ละชื่อได้สูงสุด 99 ตัวอักษรรวมกับอักขระปิดท้าย `\0` ส่วน `printType` ใช้ `0` แทนขาวดำ และ `1` แทนสี
+`fileName` เป็นอาร์เรย์อักขระ 2 มิติ เพราะภาษา C ไม่มีชนิด `string` โดยมิติแรกเก็บงาน 10 งาน และมิติที่สองเก็บชื่อไฟล์แต่ละชื่อได้สูงสุด 99 ตัวอักษรรวมกับอักขระปิดท้าย `\0` ส่วน `isColor` ใช้ `false` แทนขาวดำ และ `true` แทนสี
 
 ประกาศ Function Prototypes ก่อน `main(void)` เพื่อให้ทุกคนใช้ชื่อและชนิดพารามิเตอร์ตรงกัน
 
 ```c
 void initPrinterSystem(PrinterSystem *printer);
-int isEmpty(const PrinterSystem *printer);
-int isFull(const PrinterSystem *printer);
+bool isEmpty(const PrinterSystem *printer);
+bool isFull(const PrinterSystem *printer);
 
-double calculatePrice(int page, int type);
-int hasEnoughPaper(const PrinterSystem *printer, int page);
-int hasEnoughInk(const PrinterSystem *printer, int page, int type);
+double calculatePrice(int page, bool isColor);
+bool hasEnoughPaper(const PrinterSystem *printer, int page);
+bool hasEnoughInk(const PrinterSystem *printer, int page, bool isColor);
 
-void enqueue(PrinterSystem *printer, const char file[], int page, int type);
-void dequeue(PrinterSystem *printer);
+bool enqueue(PrinterSystem *printer, const char file[], int page, bool isColor);
+bool dequeue(PrinterSystem *printer);
 void viewQueue(const PrinterSystem *printer);
 
-void addPaper(PrinterSystem *printer, int amount);
-void refillInk(PrinterSystem *printer, int type, int amount);
+bool addPaper(PrinterSystem *printer, int amount);
+bool refillInk(PrinterSystem *printer, bool isColor, int amount);
 void viewPrinterStatus(const PrinterSystem *printer);
 void viewTotalIncome(const PrinterSystem *printer);
 ```
@@ -182,7 +182,7 @@ void viewTotalIncome(const PrinterSystem *printer);
 ```text
 fileName[0] = "report.pdf"
 pages[0] = 10
-printType[0] = COLOR
+isColor[0] = true
 jobPrice[0] = 50.00
 ```
 
@@ -209,7 +209,7 @@ printer->front = (printer->front + 1) % MAX_SIZE;
 
 ```mermaid
 flowchart LR
-    S["struct PrinterSystem<br/>--------------------<br/>char fileName[10][100]<br/>int pages[10]<br/>int printType[10]<br/>double jobPrice[10]<br/>int front, rear, count<br/>int paperAmount<br/>int blackInkAmount<br/>int colorInkAmount<br/>double totalIncome"]
+    S["struct PrinterSystem<br/>--------------------<br/>char fileName[10][100]<br/>int pages[10]<br/>bool isColor[10]<br/>double jobPrice[10]<br/>int front, rear, count<br/>int paperAmount<br/>int blackInkAmount<br/>int colorInkAmount<br/>double totalIncome"]
 
     F["Functions<br/>--------------------<br/>initPrinterSystem()<br/>isEmpty() / isFull()<br/>calculatePrice()<br/>hasEnoughPaper()<br/>hasEnoughInk()<br/>enqueue() / dequeue()<br/>viewQueue()<br/>addPaper() / refillInk()<br/>viewPrinterStatus()<br/>viewTotalIncome()"]
 
@@ -232,12 +232,11 @@ flowchart LR
 | ---------------- | ---------- | --------------------- |
 | `MAX_SIZE`       | Macro จำนวนเต็ม | ขนาดสูงสุดของคิว      |
 | `MAX_FILENAME`   | Macro จำนวนเต็ม | ขนาดสูงสุดของชื่อไฟล์ |
-| `BW`, `COLOR`    | Macro จำนวนเต็ม | รหัสประเภทการพิมพ์    |
 | `BW_PRICE`       | Macro ทศนิยม | ราคาขาวดำต่อหน้า      |
 | `COLOR_PRICE`    | Macro ทศนิยม | ราคาสีต่อหน้า         |
 | `fileName`       | `char[][]` | เก็บชื่อไฟล์หลายรายการ |
 | `pages`          | `int[]`    | เก็บจำนวนหน้า         |
-| `printType`      | `int[]`    | เก็บประเภท 0 = BW, 1 = COLOR |
+| `isColor`        | `bool[]`   | เก็บประเภท `false` = BW, `true` = COLOR |
 | `jobPrice`       | `double[]` | เก็บราคาของแต่ละงาน   |
 | `front`          | `int`      | ตำแหน่งหน้าคิว        |
 | `rear`           | `int`      | ตำแหน่งเพิ่มงานใหม่   |
@@ -265,7 +264,7 @@ colorInkAmount = 100
 totalIncome = 0
 ```
 
-### 10.2 `isEmpty(const PrinterSystem *printer)`
+### 10.2 `bool isEmpty(const PrinterSystem *printer)`
 
 ตรวจว่าคิวว่างหรือไม่
 
@@ -273,7 +272,7 @@ totalIncome = 0
 return printer->count == 0;
 ```
 
-### 10.3 `isFull(const PrinterSystem *printer)`
+### 10.3 `bool isFull(const PrinterSystem *printer)`
 
 ตรวจว่าคิวเต็มหรือไม่
 
@@ -281,32 +280,32 @@ return printer->count == 0;
 return printer->count == MAX_SIZE;
 ```
 
-### 10.4 `calculatePrice(int page, int type)`
+### 10.4 `calculatePrice(int page, bool isColor)`
 
 คำนวณราคาตามจำนวนหน้าและประเภทการพิมพ์
 
 ```text
-ถ้า type เป็น BW
+ถ้า isColor เป็น false
     ราคา = page × BW_PRICE
-ถ้า type เป็น COLOR
+ถ้า isColor เป็น true
     ราคา = page × COLOR_PRICE
 ```
 
-### 10.5 `enqueue(PrinterSystem *printer, const char file[], int page, int type)`
+### 10.5 `bool enqueue(PrinterSystem *printer, const char file[], int page, bool isColor)`
 
 ขั้นตอนการเพิ่มงาน
 
 1. ตรวจว่าคิวเต็มหรือไม่
 2. ตรวจว่าชื่อไฟล์ไม่ว่าง
 3. ตรวจว่าจำนวนหน้ามากกว่า 0
-4. ตรวจว่าประเภทเป็น `BW` หรือ `COLOR`
+4. รับค่า `bool isColor` ที่แปลงจากตัวเลือกเมนูแล้ว
 5. คำนวณราคา
 6. คัดลอกชื่อไฟล์ด้วย `strncpy()` และบันทึกข้อมูลอื่นลงอาร์เรย์ตำแหน่ง `printer->rear`
 7. เลื่อน `rear`
 8. เพิ่ม `count`
-9. แสดงผลว่ารับงานสำเร็จ
+9. คืน `true` เมื่อเพิ่มสำเร็จ หรือ `false` เมื่อข้อมูลไม่ถูกต้องหรือคิวเต็ม
 
-### 10.6 `hasEnoughPaper(const PrinterSystem *printer, int page)`
+### 10.6 `bool hasEnoughPaper(const PrinterSystem *printer, int page)`
 
 ตรวจว่ากระดาษเพียงพอสำหรับจำนวนหน้าของงานหรือไม่
 
@@ -314,16 +313,16 @@ return printer->count == MAX_SIZE;
 return printer->paperAmount >= page;
 ```
 
-### 10.7 `hasEnoughInk(const PrinterSystem *printer, int page, int type)`
+### 10.7 `bool hasEnoughInk(const PrinterSystem *printer, int page, bool isColor)`
 
 ตรวจหมึกตามประเภทการพิมพ์
 
 ```text
-ถ้าเป็น BW ตรวจ blackInkAmount
-ถ้าเป็น COLOR ตรวจ colorInkAmount
+ถ้า isColor เป็น false ตรวจ blackInkAmount
+ถ้า isColor เป็น true ตรวจ colorInkAmount
 ```
 
-### 10.8 `dequeue(PrinterSystem *printer)`
+### 10.8 `bool dequeue(PrinterSystem *printer)`
 
 ฟังก์ชันนี้ทำหน้าที่พิมพ์และนำงานแรกออกจากคิว
 
@@ -338,6 +337,7 @@ return printer->paperAmount >= page;
 9. เพิ่มราคางานเข้า `totalIncome`
 10. เลื่อน `front`
 11. ลด `count`
+12. คืน `true` เมื่อพิมพ์สำเร็จ หรือ `false` เมื่อคิวว่างหรือทรัพยากรไม่พอ
 
 ### 10.9 `viewQueue(const PrinterSystem *printer)`
 
@@ -355,13 +355,13 @@ int index = (printer->front + i) % MAX_SIZE;
 - ประเภทการพิมพ์
 - ราคา
 
-### 10.10 `addPaper(PrinterSystem *printer, int amount)`
+### 10.10 `bool addPaper(PrinterSystem *printer, int amount)`
 
-ตรวจว่าจำนวนที่เติมมากกว่า 0 แล้วเพิ่มเข้า `paperAmount`
+ตรวจว่าจำนวนที่เติมมากกว่า 0 แล้วเพิ่มเข้า `paperAmount` จากนั้นคืน `true` หากสำเร็จ หรือ `false` หากจำนวนไม่ถูกต้อง
 
-### 10.11 `refillInk(PrinterSystem *printer, int type, int amount)`
+### 10.11 `bool refillInk(PrinterSystem *printer, bool isColor, int amount)`
 
-ตรวจชนิดและจำนวนหมึก แล้วเพิ่มเข้า `blackInkAmount` หรือ `colorInkAmount`
+ใช้ `isColor` เลือก `blackInkAmount` หรือ `colorInkAmount` ตรวจจำนวนหมึก แล้วคืน `true` หากเติมสำเร็จ
 
 ### 10.12 `viewPrinterStatus(const PrinterSystem *printer)`
 
@@ -457,8 +457,9 @@ flowchart TD
     รับค่า choice
 
     ถ้า choice = 1
-        รับชื่อไฟล์ จำนวนหน้า และประเภท
-        เรียก enqueue(&printer, file, page, type)
+        รับชื่อไฟล์ จำนวนหน้า และตัวเลือกประเภท
+        กำหนด isColor = (colorChoice == 2)
+        เรียก enqueue(&printer, file, page, isColor)
 
     ถ้า choice = 2
         เรียก dequeue(&printer)
@@ -471,8 +472,9 @@ flowchart TD
         เรียก addPaper(&printer, amount)
 
     ถ้า choice = 5
-        รับชนิดและจำนวนหมึก
-        เรียก refillInk(&printer, type, amount)
+        รับตัวเลือกชนิดและจำนวนหมึก
+        กำหนด isColor = (colorChoice == 2)
+        เรียก refillInk(&printer, isColor, amount)
 
     ถ้า choice = 6
         เรียก viewPrinterStatus(&printer)
@@ -745,4 +747,4 @@ gcc -std=c11 -Wall -Wextra src/main.c -o build/main.exe
 - เชื่อมต่อฐานข้อมูล
 - สร้างหน้าจอแบบ GUI
 
-หากต้องการคิดราคาตามสีจริงของแผ่นกระดาษ ให้เพิ่มอาร์เรย์ `paperColor[10]` และกำหนดราคาของกระดาษแต่ละสีแยกจาก `printType`
+หากต้องการคิดราคาตามสีจริงของแผ่นกระดาษ ให้เพิ่มอาร์เรย์ `paperColor[10][20]` และกำหนดราคาของกระดาษแต่ละสีแยกจาก `isColor` ซึ่งใช้ระบุว่างานพิมพ์เป็นสีหรือขาวดำ
