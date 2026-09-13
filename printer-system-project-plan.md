@@ -3,11 +3,12 @@
 ## 1. ข้อมูลโครงการ
 
 - **ชื่อระบบ:** Printer Job Scheduling System
-- **ภาษาโปรแกรม:** C++
+- **ภาษาโปรแกรม:** C (มาตรฐาน C11)
 - **รูปแบบโปรแกรม:** Console Application
 - **โครงสร้างข้อมูลหลัก:** Queue แบบ Circular Queue
 - **หลักการจัดคิว:** FIFO (First In, First Out)
-- **จำนวนคลาส:** 1 คลาส ชื่อ `PrinterSystem`
+- **โครงสร้างหลัก:** 1 `struct` ชื่อ `PrinterSystem` พร้อมชุดฟังก์ชันจัดการ
+- **ไฟล์โปรแกรมหลัก:** `src/main.c` เพียงไฟล์เดียว
 - **จำนวนสมาชิก:** 4 คน
 - **ขนาดคิวเริ่มต้น:** รองรับงานพิมพ์สูงสุด 10 งาน
 
@@ -27,7 +28,7 @@
 
 1. ศึกษาการทำงานของโครงสร้างข้อมูล Queue
 2. ฝึกใช้ Array เพื่อเก็บข้อมูลหลายรายการ
-3. ฝึกใช้ Class และการกำหนด `private` กับ `public`
+3. ฝึกใช้ `struct`, ฟังก์ชัน และ Pointer ในภาษา C
 4. จำลองการจัดลำดับงานพิมพ์แบบ FIFO
 5. ตรวจสอบสถานะกระดาษและหมึกก่อนพิมพ์
 6. คำนวณค่าบริการตามจำนวนหน้าและประเภทการพิมพ์
@@ -96,16 +97,16 @@
 
 | ข้อมูล         | ชนิดข้อมูล | ตัวอย่าง          | เงื่อนไข            |
 | -------------- | ---------- | ----------------- | ------------------- |
-| ชื่อไฟล์       | `string`   | `report.pdf`      | ต้องไม่ว่าง         |
+| ชื่อไฟล์       | `char[]`   | `report.pdf`      | ต้องไม่ว่างและไม่เกิน 99 ตัวอักษร |
 | จำนวนหน้า      | `int`      | `10`              | ต้องมากกว่า 0       |
-| ประเภทการพิมพ์ | `string`   | `BW` หรือ `COLOR` | ต้องเป็นค่าที่กำหนด |
+| ประเภทการพิมพ์ | `int`      | `0` = BW, `1` = COLOR | ต้องเป็นค่าที่กำหนด |
 
 เมื่อเติมทรัพยากร ระบบรับข้อมูลดังนี้
 
 | ข้อมูล             | ชนิดข้อมูล | เงื่อนไข             |
 | ------------------ | ---------- | -------------------- |
 | จำนวนกระดาษที่เติม | `int`      | ต้องมากกว่า 0        |
-| ประเภทหมึก         | `string`   | `BLACK` หรือ `COLOR` |
+| ประเภทหมึก         | `int`      | `0` = BLACK, `1` = COLOR |
 | จำนวนหมึกที่เติม   | `int`      | ต้องมากกว่า 0        |
 
 ### 6.2 ผลลัพธ์
@@ -125,13 +126,55 @@
 
 ## 7. โครงสร้างข้อมูล
 
-เพื่อให้โปรแกรมมีเพียงหนึ่งคลาส จะใช้อาร์เรย์ 1 มิติหลายตัวแบบ Parallel Arrays โดยข้อมูลที่อยู่ตำแหน่งเดียวกันถือเป็นงานเดียวกัน
+เพื่อให้โปรแกรมอยู่ใน `main.c` เพียงไฟล์เดียว จะใช้ `struct PrinterSystem` เก็บสถานะทั้งหมด และใช้อาร์เรย์แบบ Parallel Arrays โดยข้อมูลที่อยู่ตำแหน่งเดียวกันถือเป็นงานเดียวกัน
 
-```cpp
-string fileName[10];
-int pages[10];
-string printType[10];
-double jobPrice[10];
+```c
+#define MAX_SIZE 10
+#define MAX_FILENAME 100
+#define BW 0
+#define COLOR 1
+#define BW_PRICE 1.0
+#define COLOR_PRICE 5.0
+
+typedef struct {
+    char fileName[MAX_SIZE][MAX_FILENAME];
+    int pages[MAX_SIZE];
+    int printType[MAX_SIZE];
+    double jobPrice[MAX_SIZE];
+
+    int front;
+    int rear;
+    int count;
+
+    int paperAmount;
+    int blackInkAmount;
+    int colorInkAmount;
+
+    double totalIncome;
+} PrinterSystem;
+```
+
+`fileName` เป็นอาร์เรย์อักขระ 2 มิติ เพราะภาษา C ไม่มีชนิด `string` โดยมิติแรกเก็บงาน 10 งาน และมิติที่สองเก็บชื่อไฟล์แต่ละชื่อได้สูงสุด 99 ตัวอักษรรวมกับอักขระปิดท้าย `\0` ส่วน `printType` ใช้ `0` แทนขาวดำ และ `1` แทนสี
+
+ประกาศ Function Prototypes ก่อน `main(void)` เพื่อให้ทุกคนใช้ชื่อและชนิดพารามิเตอร์ตรงกัน
+
+```c
+void initPrinterSystem(PrinterSystem *printer);
+int isEmpty(const PrinterSystem *printer);
+int isFull(const PrinterSystem *printer);
+
+double calculatePrice(int page, int type);
+int hasEnoughPaper(const PrinterSystem *printer, int page);
+int hasEnoughInk(const PrinterSystem *printer, int page, int type);
+
+void enqueue(PrinterSystem *printer, const char file[], int page, int type);
+void dequeue(PrinterSystem *printer);
+void viewQueue(const PrinterSystem *printer);
+
+void addPaper(PrinterSystem *printer, int amount);
+void refillInk(PrinterSystem *printer, int type, int amount);
+void viewPrinterStatus(const PrinterSystem *printer);
+void viewTotalIncome(const PrinterSystem *printer);
 ```
 
 ตัวอย่างข้อมูลตำแหน่งที่ 0
@@ -139,7 +182,7 @@ double jobPrice[10];
 ```text
 fileName[0] = "report.pdf"
 pages[0] = 10
-printType[0] = "COLOR"
+printType[0] = COLOR
 jobPrice[0] = 50.00
 ```
 
@@ -153,69 +196,48 @@ jobPrice[0] = 50.00
 
 การเลื่อนตำแหน่งใช้สูตร
 
-```cpp
-rear = (rear + 1) % MAX_SIZE;
-front = (front + 1) % MAX_SIZE;
+```c
+printer->rear = (printer->rear + 1) % MAX_SIZE;
+printer->front = (printer->front + 1) % MAX_SIZE;
 ```
 
 สูตรนี้ทำให้ตำแหน่งวนกลับไปที่ 0 เมื่อถึงท้ายอาร์เรย์
 
 ---
 
-## 8. Class Diagram
+## 8. Structure and Function Diagram สำหรับภาษา C
 
 ```mermaid
-classDiagram
-    class PrinterSystem {
-        -int MAX_SIZE = 10
-        -double BW_PRICE = 1.0
-        -double COLOR_PRICE = 5.0
-        -string fileName[10]
-        -int pages[10]
-        -string printType[10]
-        -double jobPrice[10]
-        -int front
-        -int rear
-        -int count
-        -int paperAmount
-        -int blackInkAmount
-        -int colorInkAmount
-        -double totalIncome
+flowchart LR
+    S["struct PrinterSystem<br/>--------------------<br/>char fileName[10][100]<br/>int pages[10]<br/>int printType[10]<br/>double jobPrice[10]<br/>int front, rear, count<br/>int paperAmount<br/>int blackInkAmount<br/>int colorInkAmount<br/>double totalIncome"]
 
-        -double calculatePrice(int page, string type)
-        -bool hasEnoughPaper(int page)
-        -bool hasEnoughInk(int page, string type)
+    F["Functions<br/>--------------------<br/>initPrinterSystem()<br/>isEmpty() / isFull()<br/>calculatePrice()<br/>hasEnoughPaper()<br/>hasEnoughInk()<br/>enqueue() / dequeue()<br/>viewQueue()<br/>addPaper() / refillInk()<br/>viewPrinterStatus()<br/>viewTotalIncome()"]
 
-        +PrinterSystem()
-        +bool isEmpty()
-        +bool isFull()
-        +void enqueue(string file, int page, string type)
-        +void dequeue()
-        +void viewQueue()
-        +void addPaper(int amount)
-        +void refillInk(string type, int amount)
-        +void viewPrinterStatus()
-        +void viewTotalIncome()
-    }
+    F -->|รับ PrinterSystem pointer| S
 ```
 
 ### ความหมายของสัญลักษณ์
 
-- `-` หมายถึง `private` ใช้งานภายในคลาส
-- `+` หมายถึง `public` สามารถเรียกจาก `main()` ได้
+- `PrinterSystem` เป็น `struct` ที่เก็บข้อมูลและสถานะของระบบ
+- `PrinterFunctions` เป็นเพียงกลุ่มฟังก์ชันในแผนภาพ ไม่ใช่ชนิดข้อมูลที่ต้องประกาศเพิ่ม
+- คำว่า `pointer` ในแผนภาพหมายถึงพารามิเตอร์ชนิด `PrinterSystem *`
+- ฟังก์ชันที่แก้ข้อมูลต้องรับ `PrinterSystem *printer`
+- ฟังก์ชันที่อ่านอย่างเดียวควรรับ `const PrinterSystem *printer`
 
 ---
 
-## 9. รายละเอียดตัวแปรภายในคลาส
+## 9. รายละเอียดค่าคงที่และสมาชิกภายใน `struct`
 
 | ตัวแปร           | ชนิดข้อมูล | หน้าที่               |
 | ---------------- | ---------- | --------------------- |
-| `MAX_SIZE`       | `int`      | ขนาดสูงสุดของคิว      |
-| `BW_PRICE`       | `double`   | ราคาขาวดำต่อหน้า      |
-| `COLOR_PRICE`    | `double`   | ราคาสีต่อหน้า         |
-| `fileName`       | `string[]` | เก็บชื่อไฟล์          |
+| `MAX_SIZE`       | Macro จำนวนเต็ม | ขนาดสูงสุดของคิว      |
+| `MAX_FILENAME`   | Macro จำนวนเต็ม | ขนาดสูงสุดของชื่อไฟล์ |
+| `BW`, `COLOR`    | Macro จำนวนเต็ม | รหัสประเภทการพิมพ์    |
+| `BW_PRICE`       | Macro ทศนิยม | ราคาขาวดำต่อหน้า      |
+| `COLOR_PRICE`    | Macro ทศนิยม | ราคาสีต่อหน้า         |
+| `fileName`       | `char[][]` | เก็บชื่อไฟล์หลายรายการ |
 | `pages`          | `int[]`    | เก็บจำนวนหน้า         |
-| `printType`      | `string[]` | เก็บประเภทการพิมพ์    |
+| `printType`      | `int[]`    | เก็บประเภท 0 = BW, 1 = COLOR |
 | `jobPrice`       | `double[]` | เก็บราคาของแต่ละงาน   |
 | `front`          | `int`      | ตำแหน่งหน้าคิว        |
 | `rear`           | `int`      | ตำแหน่งเพิ่มงานใหม่   |
@@ -229,9 +251,9 @@ classDiagram
 
 ## 10. รายละเอียดฟังก์ชัน
 
-### 10.1 `PrinterSystem()`
+### 10.1 `initPrinterSystem(PrinterSystem *printer)`
 
-Constructor สำหรับกำหนดค่าเริ่มต้น เช่น
+ฟังก์ชันเริ่มต้นระบบสำหรับกำหนดค่าให้สมาชิกภายใน `struct` ผ่าน Pointer เช่น
 
 ```text
 front = 0
@@ -243,23 +265,23 @@ colorInkAmount = 100
 totalIncome = 0
 ```
 
-### 10.2 `isEmpty()`
+### 10.2 `isEmpty(const PrinterSystem *printer)`
 
 ตรวจว่าคิวว่างหรือไม่
 
-```cpp
-return count == 0;
+```c
+return printer->count == 0;
 ```
 
-### 10.3 `isFull()`
+### 10.3 `isFull(const PrinterSystem *printer)`
 
 ตรวจว่าคิวเต็มหรือไม่
 
-```cpp
-return count == MAX_SIZE;
+```c
+return printer->count == MAX_SIZE;
 ```
 
-### 10.4 `calculatePrice(int page, string type)`
+### 10.4 `calculatePrice(int page, int type)`
 
 คำนวณราคาตามจำนวนหน้าและประเภทการพิมพ์
 
@@ -270,7 +292,7 @@ return count == MAX_SIZE;
     ราคา = page × COLOR_PRICE
 ```
 
-### 10.5 `enqueue(string file, int page, string type)`
+### 10.5 `enqueue(PrinterSystem *printer, const char file[], int page, int type)`
 
 ขั้นตอนการเพิ่มงาน
 
@@ -279,20 +301,20 @@ return count == MAX_SIZE;
 3. ตรวจว่าจำนวนหน้ามากกว่า 0
 4. ตรวจว่าประเภทเป็น `BW` หรือ `COLOR`
 5. คำนวณราคา
-6. บันทึกข้อมูลลงอาร์เรย์ตำแหน่ง `rear`
+6. คัดลอกชื่อไฟล์ด้วย `strncpy()` และบันทึกข้อมูลอื่นลงอาร์เรย์ตำแหน่ง `printer->rear`
 7. เลื่อน `rear`
 8. เพิ่ม `count`
 9. แสดงผลว่ารับงานสำเร็จ
 
-### 10.6 `hasEnoughPaper(int page)`
+### 10.6 `hasEnoughPaper(const PrinterSystem *printer, int page)`
 
 ตรวจว่ากระดาษเพียงพอสำหรับจำนวนหน้าของงานหรือไม่
 
-```cpp
-return paperAmount >= page;
+```c
+return printer->paperAmount >= page;
 ```
 
-### 10.7 `hasEnoughInk(int page, string type)`
+### 10.7 `hasEnoughInk(const PrinterSystem *printer, int page, int type)`
 
 ตรวจหมึกตามประเภทการพิมพ์
 
@@ -301,7 +323,7 @@ return paperAmount >= page;
 ถ้าเป็น COLOR ตรวจ colorInkAmount
 ```
 
-### 10.8 `dequeue()`
+### 10.8 `dequeue(PrinterSystem *printer)`
 
 ฟังก์ชันนี้ทำหน้าที่พิมพ์และนำงานแรกออกจากคิว
 
@@ -317,12 +339,12 @@ return paperAmount >= page;
 10. เลื่อน `front`
 11. ลด `count`
 
-### 10.9 `viewQueue()`
+### 10.9 `viewQueue(const PrinterSystem *printer)`
 
 แสดงงานทั้งหมดตั้งแต่ `front` จำนวน `count` งาน โดยคำนวณตำแหน่งด้วย
 
-```cpp
-int index = (front + i) % MAX_SIZE;
+```c
+int index = (printer->front + i) % MAX_SIZE;
 ```
 
 รายละเอียดที่ต้องแสดง
@@ -333,15 +355,15 @@ int index = (front + i) % MAX_SIZE;
 - ประเภทการพิมพ์
 - ราคา
 
-### 10.10 `addPaper(int amount)`
+### 10.10 `addPaper(PrinterSystem *printer, int amount)`
 
 ตรวจว่าจำนวนที่เติมมากกว่า 0 แล้วเพิ่มเข้า `paperAmount`
 
-### 10.11 `refillInk(string type, int amount)`
+### 10.11 `refillInk(PrinterSystem *printer, int type, int amount)`
 
 ตรวจชนิดและจำนวนหมึก แล้วเพิ่มเข้า `blackInkAmount` หรือ `colorInkAmount`
 
-### 10.12 `viewPrinterStatus()`
+### 10.12 `viewPrinterStatus(const PrinterSystem *printer)`
 
 แสดงสถานะต่อไปนี้
 
@@ -350,7 +372,7 @@ int index = (front + i) % MAX_SIZE;
 - หมึกดำ
 - หมึกสี
 
-### 10.13 `viewTotalIncome()`
+### 10.13 `viewTotalIncome(const PrinterSystem *printer)`
 
 แสดงรายได้รวม โดยกำหนดทศนิยม 2 ตำแหน่ง
 
@@ -380,7 +402,7 @@ int index = (front + i) % MAX_SIZE;
 
 ```mermaid
 flowchart TD
-    A([เริ่มโปรแกรม]) --> B[สร้าง PrinterSystem และกำหนดค่าเริ่มต้น]
+    A([เริ่มโปรแกรม]) --> B[ประกาศตัวแปร struct และเรียก initPrinterSystem]
     B --> C[แสดงเมนูหลัก]
     C --> D{เลือกเมนู}
 
@@ -427,7 +449,8 @@ flowchart TD
 ## 13. Pseudocode ของโปรแกรมหลัก
 
 ```text
-สร้าง object ชื่อ printer จาก class PrinterSystem
+ประกาศตัวแปร `PrinterSystem printer`
+เรียก `initPrinterSystem(&printer)` เพื่อกำหนดค่าเริ่มต้น
 
 ทำซ้ำ
     แสดงเมนู
@@ -435,27 +458,27 @@ flowchart TD
 
     ถ้า choice = 1
         รับชื่อไฟล์ จำนวนหน้า และประเภท
-        เรียก enqueue()
+        เรียก enqueue(&printer, file, page, type)
 
     ถ้า choice = 2
-        เรียก dequeue()
+        เรียก dequeue(&printer)
 
     ถ้า choice = 3
-        เรียก viewQueue()
+        เรียก viewQueue(&printer)
 
     ถ้า choice = 4
         รับจำนวนกระดาษ
-        เรียก addPaper()
+        เรียก addPaper(&printer, amount)
 
     ถ้า choice = 5
         รับชนิดและจำนวนหมึก
-        เรียก refillInk()
+        เรียก refillInk(&printer, type, amount)
 
     ถ้า choice = 6
-        เรียก viewPrinterStatus()
+        เรียก viewPrinterStatus(&printer)
 
     ถ้า choice = 7
-        เรียก viewTotalIncome()
+        เรียก viewTotalIncome(&printer)
 
     ถ้า choice = 0
         แสดงข้อความปิดโปรแกรม
@@ -502,15 +525,15 @@ flowchart TD
 
 | สมาชิก  | หน้าที่หลัก             | รายละเอียดงาน                                                                                    | ผลงานที่ต้องส่ง                    |
 | ------- | ----------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------- |
-| คนที่ 1 | วิเคราะห์และออกแบบ      | สรุปความต้องการ, Class Diagram, Flowchart, โครงคลาส, Constructor, `isEmpty()`, `isFull()`        | Diagram และโค้ดส่วนโครงสร้าง       |
+| คนที่ 1 | วิเคราะห์และออกแบบ      | สรุปความต้องการ, Structure Diagram, Flowchart, ประกาศ `struct`, Function Prototypes, `initPrinterSystem()`, `isEmpty()`, `isFull()` | Diagram และโค้ดโครงสร้างใน `main.c` |
 | คนที่ 2 | ระบบ Queue              | `enqueue()`, `viewQueue()`, การเลื่อน `rear`, การแสดงงานตาม Circular Queue                       | โค้ดเพิ่มและแสดงงาน พร้อมผลทดสอบ   |
 | คนที่ 3 | ระบบพิมพ์และทรัพยากร    | `dequeue()`, ตรวจกระดาษ, ตรวจหมึก, ลดทรัพยากร, `addPaper()`, `refillInk()`                       | โค้ดพิมพ์และจัดการทรัพยากร         |
 | คนที่ 4 | ราคา เมนู และการรวมระบบ | `calculatePrice()`, `viewPrinterStatus()`, `viewTotalIncome()`, `main()`, รวมโค้ด และทดสอบภาพรวม | โปรแกรมฉบับสมบูรณ์และรายงานผลทดสอบ |
 
 ### วิธีป้องกันงานชนกัน
 
-1. ทุกคนใช้ชื่อคลาส ตัวแปร และฟังก์ชันตามเอกสารนี้
-2. สร้างโครงคลาสกลางก่อนเริ่มเขียนฟังก์ชัน
+1. ทุกคนใช้ชื่อ `struct` ตัวแปร และฟังก์ชันตามเอกสารนี้
+2. สร้าง `struct` และ Function Prototypes กลางก่อนเริ่มเขียนฟังก์ชัน
 3. แต่ละคนเขียนเฉพาะฟังก์ชันที่ตนรับผิดชอบ
 4. ไม่เปลี่ยนชื่อฟังก์ชันเองโดยไม่แจ้งทีม
 5. ส่งโค้ดเป็นรายฟังก์ชันให้คนที่ 4 รวม
@@ -525,18 +548,19 @@ flowchart TD
 - ตกลงขอบเขตระบบ
 - ตกลงราคาขาวดำและสี
 - กำหนดขนาดคิว
-- สร้าง Class Diagram
+- สร้าง Structure and Function Diagram
 - สร้าง Flowchart
 - กำหนดชื่อข้อมูลและฟังก์ชัน
 
 ### ระยะที่ 2: สร้างโครงโปรแกรม
 
 - เขียน `#include`
-- ประกาศคลาส `PrinterSystem`
-- ประกาศตัวแปร `private`
-- ประกาศฟังก์ชัน `public`
-- สร้าง Constructor
-- สร้างเมนูพื้นฐานใน `main()`
+- เขียน `#include <stdio.h>` และ `#include <string.h>`
+- กำหนดค่าคงที่ด้วย `#define`
+- ประกาศ `typedef struct PrinterSystem`
+- ประกาศ Function Prototypes
+- สร้าง `initPrinterSystem()`
+- สร้างเมนูพื้นฐานใน `main(void)`
 
 ### ระยะที่ 3: พัฒนาฟังก์ชัน
 
@@ -565,7 +589,7 @@ flowchart TD
 ### ระยะที่ 6: จัดทำรายงานและนำเสนอ
 
 - อธิบายปัญหาและวัตถุประสงค์
-- แสดง Class Diagram และ Flowchart
+- แสดง Structure and Function Diagram และ Flowchart
 - อธิบายหน้าที่ตัวแปรและฟังก์ชัน
 - สาธิตการเพิ่มงาน พิมพ์งาน เติมทรัพยากร และคิดเงิน
 - สรุปผลการทดสอบ
@@ -603,7 +627,7 @@ flowchart TD
 โปรแกรมถือว่าสมบูรณ์เมื่อผ่านเงื่อนไขทั้งหมดต่อไปนี้
 
 - Compile ผ่านโดยไม่มี Error
-- ใช้คลาส `PrinterSystem` เพียงหนึ่งคลาส
+- ใช้ `struct PrinterSystem` เป็นโครงสร้างหลักและอยู่ใน `main.c`
 - ใช้ Queue แบบ FIFO ได้ถูกต้อง
 - เพิ่มงานได้ไม่เกิน 10 งาน
 - แสดงงานเรียงตามลำดับคิวถูกต้อง
@@ -623,7 +647,7 @@ flowchart TD
 
 | ความเสี่ยง                     | ผลกระทบ                    | วิธีป้องกัน                               |
 | ------------------------------ | -------------------------- | ----------------------------------------- |
-| สมาชิกใช้ชื่อฟังก์ชันไม่ตรงกัน | รวมโค้ดไม่ได้              | ใช้ชื่อจาก Class Diagram กลาง             |
+| สมาชิกใช้ชื่อฟังก์ชันไม่ตรงกัน | รวมโค้ดไม่ได้              | ใช้ชื่อจาก Function Prototype กลาง        |
 | ตำแหน่งอาร์เรย์ไม่สัมพันธ์กัน  | ข้อมูลไฟล์และราคาไม่ตรงกัน | เขียนข้อมูลทุกอาร์เรย์ด้วย index เดียวกัน |
 | ลืมตรวจคิวเต็มหรือว่าง         | เข้าถึงข้อมูลผิดตำแหน่ง    | เรียก `isFull()` และ `isEmpty()` ก่อนเสมอ |
 | ลบงานทั้งที่พิมพ์ไม่สำเร็จ     | งานสูญหาย                  | เลื่อน `front` หลังพิมพ์สำเร็จเท่านั้น    |
@@ -633,11 +657,53 @@ flowchart TD
 
 ---
 
-## 20. รายการไฟล์ที่ควรส่ง
+## 20. การจัดไฟล์และการ Compile ภาษา C
 
-1. ไฟล์โปรแกรม C++ เช่น `printer_system.cpp`
+### 20.1 โครงสร้างโปรเจกต์
+
+```text
+dsa-project/
+├── src/
+│   └── main.c
+├── build/
+├── CMakeLists.txt
+├── README.md
+└── printer-system-project-plan.md
+```
+
+โค้ดทั้งหมด ได้แก่ `struct`, Function Prototypes, Function Definitions และ `main(void)` อยู่ใน `src/main.c` เพียงไฟล์เดียว ส่วนไฟล์ใน `build/` เป็นผลลัพธ์จากการ Compile และไม่ควรนำมาเขียนโค้ดโดยตรง
+
+### 20.2 ตัวอย่าง `CMakeLists.txt`
+
+```cmake
+cmake_minimum_required(VERSION 3.16)
+project(printer_system C)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+add_executable(printer_system src/main.c)
+```
+
+คำสั่งสร้างโปรแกรมด้วย CMake
+
+```powershell
+cmake -S . -B build
+cmake --build build
+```
+
+หรือ Compile โดยตรงด้วย GCC
+
+```powershell
+gcc -std=c11 -Wall -Wextra src/main.c -o build/main.exe
+.\build\main.exe
+```
+
+### 20.3 รายการไฟล์ที่ควรส่ง
+
+1. ไฟล์โปรแกรมภาษา C คือ `src/main.c`
 2. ไฟล์แผนงานฉบับนี้
-3. Class Diagram
+3. Structure and Function Diagram
 4. Flowchart
 5. ตารางผลการทดสอบ
 6. รายงานสรุปหน้าที่สมาชิก
