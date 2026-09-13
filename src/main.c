@@ -15,7 +15,7 @@ typedef struct
 
     int front;
     int rear;
-    int count;
+    int count; // fast check if full
 
     int paperAmount;
     int blackInkAmount;
@@ -47,4 +47,11 @@ int main()
 
 void initPrinterSystem(PrinterSystem *printer)
 {
+    printer->front = 0;
+    printer->rear = 0;
+    printer->count = 0;
+    printer->paperAmount = 100;
+    printer->blackInkAmount = 100;
+    printer->colorInkAmount = 100;
+    printer->totalIncome = 0;
 }
