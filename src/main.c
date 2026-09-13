@@ -72,24 +72,18 @@ int main()
             {
                 break;
             }
-            else if (choice == 0)
-            {
-                exit = false;
-                printf("Exiting Program. Goodbye!\n");
-                break;
-            }
             else
             {
                 printf("Error: Please enter numbers only!\n");
-            }
-            if (!exit)
-            {
-                break;
             }
         }
 
         switch (choice)
         {
+        case 0:
+            exit = false;
+            printf("Exiting Program. Goodbye!\n");
+            break;
         case 1:
             // code here
             break;
@@ -110,9 +104,6 @@ int main()
             break;
         case 7:
             // code here
-            break;
-        case 0:
-            printf("close done ~~~\n");
             break;
 
         default:
