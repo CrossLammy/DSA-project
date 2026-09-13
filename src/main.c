@@ -108,7 +108,8 @@ int main()
             // code here
             break;
         case 0:
-            printf(isEmpty(&printer));
+            printf("%d\n", isEmpty(&printer)); // test
+            printf("%d\n", isFull(&printer));  // test
             printf("close done ~~~\n");
             break;
 
@@ -134,6 +135,18 @@ void initPrinterSystem(PrinterSystem *printer)
 bool isEmpty(const PrinterSystem *printer)
 {
     if (printer->count == 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool isFull(const PrinterSystem *printer)
+{
+    if (printer->count == MAX_SIZE)
     {
         return true;
     }
