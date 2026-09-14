@@ -86,6 +86,7 @@ int main()
             break;
         case 1:
             // code here
+            printf("%d", enqueue(&printer, "ggez.pdf", 10, true));
             break;
         case 2:
             // code here
@@ -147,4 +148,36 @@ bool isFull(const PrinterSystem *printer)
     {
         return false;
     }
+}
+
+bool enqueue(PrinterSystem *printer, const char file[], int page, bool isColor)
+{
+    if (isFull(printer))
+    {
+        printf("Queue is full\n");
+        return false;
+    }
+
+    if (page <= 0 || file[0] == "\0")
+    {
+        printf("Invalid print jog\n");
+        return false;
+    }
+    if (isEmpty(printer))
+    {
+        printf("Queue is empty. Adding the first job.\n");
+    }
+
+    int index = printer->rear;
+
+    snprintf(printer->fileName[index], MAX_FILENAME, "%s", file); // input string save
+    printer->pages[index] = page;
+    printer->isColor[index] = isColor;
+    printer->jobPrice[index] = calculatePrice(page, isColor);
+
+    printer->rear = (printer->rear + 1) % MAX_SIZE;
+
+    printer->count++;
+    printf("Added %s to queue\n", file);
+    return true;
 }
