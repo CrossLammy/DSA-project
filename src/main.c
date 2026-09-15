@@ -86,13 +86,14 @@ int main()
             break;
         case 1:
             // code here
-            printf("%d", enqueue(&printer, "ggez.pdf", 10, true));
+
             break;
         case 2:
             // code here
             break;
         case 3:
             // code here
+            viewQueue(&printer);
             break;
         case 4:
             // code here
@@ -173,11 +174,44 @@ bool enqueue(PrinterSystem *printer, const char file[], int page, bool isColor)
     snprintf(printer->fileName[index], MAX_FILENAME, "%s", file); // input string save
     printer->pages[index] = page;
     printer->isColor[index] = isColor;
-    printer->jobPrice[index] = calculatePrice(page, isColor);
+    // printer->jobPrice[index] = calculatePrice(page, isColor);
 
     printer->rear = (printer->rear + 1) % MAX_SIZE;
 
     printer->count++;
     printf("Added %s to queue\n", file);
     return true;
+}
+
+void viewQueue(const PrinterSystem *printer)
+{
+    double totalPrice = 0.0;
+
+    if (isEmpty(printer))
+    {
+        printf("\nQueue is empty.\n");
+        return;
+    }
+    printf("\n");
+    printf("======================= PRINT QUEUE =======================\n");
+    printf("%-4s %-25s %7s %-8s %9s %-8s\n", "No.", "File name", "Pages", "Type", "Price", "Status");
+    printf("-----------------------------------------------------------\n");
+    for (int i = 0; i < printer->count; i++)
+    {
+        int index = (printer->front + i) % MAX_SIZE;
+
+        printf(
+            "%-4d %-25.25s %7d %-8s %9.2f %-8s\n",
+            i + 1,
+            printer->fileName[index],
+            printer->pages[index],
+            printer->isColor[index] ? "COLOR" : "BW",               // short hand
+            printer->jobPrice[index], i == 0 ? "NEXT" : "WAITING"); // look first in queue
+
+        totalPrice += printer->jobPrice[index];
+    }
+    printf("-----------------------------------------------------------\n");
+    printf("Job queue: %d/%d\n", printer->count, MAX_SIZE);
+    printf("Sum price: %.2f bath", totalPrice);
+    printf("===========================================================\n");
 }
