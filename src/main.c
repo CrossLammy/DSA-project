@@ -89,7 +89,7 @@ int main()
 
             break;
         case 2:
-            // code here
+            dequeue(&printer);
             break;
         case 3:
             // code here
@@ -159,7 +159,7 @@ bool enqueue(PrinterSystem *printer, const char file[], int page, bool isColor)
         return false;
     }
 
-    if (page <= 0 || file[0] == "\0")
+    if (page <= 0 || file[0] == '\0')
     {
         printf("Invalid print jog\n");
         return false;
@@ -214,4 +214,114 @@ void viewQueue(const PrinterSystem *printer)
     printf("Job queue: %d/%d\n", printer->count, MAX_SIZE);
     printf("Sum price: %.2f bath", totalPrice);
     printf("===========================================================\n");
+}
+
+// เริ่มตรงนี้นะจ๊ะ
+// ตรวจว่ามีกระดาษเพียงพอสำหรับการพิมพ์ไหม
+bool hasEnoughPaper(const PrinterSystem *printer, int page)
+{
+    return printer->paperAmount >= page;
+}
+
+// ตรวจว่ามีหมึกเพียงพอสำหรับการพิมพ์ไหม
+bool hasEnoughInk(const PrinterSystem *printer, int page, bool isColor)
+{
+    if (isColor)
+    {
+        return printer->colorInkAmount >= page;
+    }
+    else
+    {
+        return printer->blackInkAmount >= page;
+    }
+}
+
+// พิมพ์งานแล้วก็เอางานแรกออกจากคิว
+bool dequeue(PrinterSystem *printer)
+{
+    if (isEmpty(printer))
+    {
+        printf("Queue is empty. No job to print.\n");
+        return false;
+    }
+
+    int index = printer->front;
+    int page = printer->pages[index];
+    bool isColor = printer->isColor[index];
+
+    // ตรวจดูกระดาษและหมึกก่อนพิมพ์
+    if (!hasEnoughPaper(printer, page))
+    {
+        printf("Not enough paper to print %s.\n",
+               printer->fileName[index]);
+        return false;
+    }
+
+    if (!hasEnoughInk(printer, page, isColor))
+    {
+        printf("Not enough ink to print %s.\n",
+               printer->fileName[index]);
+        return false;
+    }
+
+    // ลดกระดาษและหมึกหลังพิมพ์
+    printer->paperAmount -= page;
+
+    if (isColor)
+    {
+        printer->colorInkAmount -= page;
+    }
+    else
+    {
+        printer->blackInkAmount -= page;
+    }
+
+    printf("Printed %s successfully.\n", printer->fileName[index]);
+
+    printer->front = (printer->front + 1) % MAX_SIZE;
+    printer->count--;
+
+    return true;
+}
+
+// เพิ่มกระดาษ
+bool addPaper(PrinterSystem *printer, int amount)
+{
+    if (amount <= 0)
+    {
+        printf("Invalid paper amount.\n");
+        return false;
+    }
+
+    printer->paperAmount += amount;
+
+    printf("Added %d paper(s) successfully.\n", amount);
+    printf("Current paper amount: %d\n", printer->paperAmount);
+
+    return true;
+}
+
+// เติมหมึกดำและหมึกสี
+bool refillInk(PrinterSystem *printer, bool isColor, int amount)
+{
+    if (amount <= 0)
+    {
+        printf("Invalid ink amount.\n");
+        return false;
+    }
+
+    if (isColor)
+    {
+        printer->colorInkAmount += amount;
+        printf("Added %d color ink successfully.\n", amount);
+        printf("Current color ink amount: %d\n", printer->colorInkAmount);
+    }
+    else
+    {
+        printer->blackInkAmount += amount;
+        printf("Added %d black ink successfully.\n", amount);
+        printf("Current black ink amount: %d\n", printer->blackInkAmount);
+    }
+
+    return true;
 }
