@@ -212,7 +212,7 @@ void viewQueue(const PrinterSystem *printer)
     }
     printf("-----------------------------------------------------------\n");
     printf("Job queue: %d/%d\n", printer->count, MAX_SIZE);
-    printf("Sum price: %.2f bath", totalPrice);
+    printf("Sum price: %.2f bath\n", totalPrice);
     printf("===========================================================\n");
 }
 
@@ -282,7 +282,7 @@ bool dequeue(PrinterSystem *printer)
     printer->totalIncome += printer->jobPrice[index];
     printf("Job price: %.2f\n", printer->jobPrice[index]);
     printf("Total income: %.2f\n", printer->totalIncome);
-    
+
     printer->front = (printer->front + 1) % MAX_SIZE;
     printer->count--;
 
@@ -330,4 +330,3 @@ bool refillInk(PrinterSystem *printer, bool isColor, int amount)
 
     return true;
 }
-
