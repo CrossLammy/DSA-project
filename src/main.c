@@ -280,6 +280,8 @@ bool dequeue(PrinterSystem *printer)
 
     // เพิ่มรายได้หลังพิมพ์สำเร็จ
     printer->totalIncome += printer->jobPrice[index];
+    printf("Job price: %.2f\n", printer->jobPrice[index]);
+    printf("Total income: %.2f\n", printer->totalIncome);
     
     printer->front = (printer->front + 1) % MAX_SIZE;
     printer->count--;
@@ -328,3 +330,4 @@ bool refillInk(PrinterSystem *printer, bool isColor, int amount)
 
     return true;
 }
+
