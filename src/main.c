@@ -278,6 +278,9 @@ bool dequeue(PrinterSystem *printer)
 
     printf("Printed %s successfully.\n", printer->fileName[index]);
 
+    // เพิ่มรายได้หลังพิมพ์สำเร็จ
+    printer->totalIncome += printer->jobPrice[index];
+    
     printer->front = (printer->front + 1) % MAX_SIZE;
     printer->count--;
 
