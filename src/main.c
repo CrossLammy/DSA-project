@@ -87,6 +87,7 @@ int main()
         case 1:
             // code here
             // เขียนตรงนี้ด้วย <----
+            printf("heelo world!!");
             break;
         case 2:
             dequeue(&printer);
