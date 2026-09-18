@@ -93,7 +93,7 @@ int main()
             dequeue(&printer);
             break;
         case 3:
-            // ยังไม่เริ่มเขียนจ้า
+            // code here
             viewQueue(&printer);
             break;
         case 4:
@@ -175,7 +175,7 @@ bool enqueue(PrinterSystem *printer, const char file[], int page, bool isColor)
     snprintf(printer->fileName[index], MAX_FILENAME, "%s", file); // input string save
     printer->pages[index] = page;
     printer->isColor[index] = isColor;
-    // printer->jobPrice[index] = calculatePrice(page, isColor);
+    printer->jobPrice[index] = calculatePrice(page, isColor);
 
     printer->rear = (printer->rear + 1) % MAX_SIZE;
 
@@ -330,4 +330,17 @@ bool refillInk(PrinterSystem *printer, bool isColor, int amount)
     }
 
     return true;
+}
+
+//แครอท/เมย์ เริ่มตรงนี้จ้าาาาาาา
+double calculatePrice(int page, bool isColor)
+{
+    if (isColor)
+    {
+        return page * COLOR_PRICE;
+    }
+    else
+    {
+        return page * BW_PRICE;
+    }
 }
