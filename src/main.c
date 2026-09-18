@@ -86,7 +86,7 @@ int main()
             break;
         case 1:
             // code here
-            // dwdwdw
+            // เขียนตรงนี้ด้วย <----
             break;
         case 2:
             dequeue(&printer);
