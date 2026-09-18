@@ -93,7 +93,7 @@ int main()
             dequeue(&printer);
             break;
         case 3:
-            // code here
+            // ยังไม่เริ่มเขียนจ้า
             viewQueue(&printer);
             break;
         case 4:
