@@ -41,7 +41,6 @@ bool addPaper(PrinterSystem *printer, int amount);
 bool refillInk(PrinterSystem *printer, bool isColor, int amount);
 void viewPrinterStatus(const PrinterSystem *printer);
 void viewTotalIncome(const PrinterSystem *printer);
-bool addPrintJob(PrinterSystem *printer); //รับค่าไฟล์งานพิมพ์จากผู้ใช้ แล้วเรียก enqueue()
 void refillInkMenu(PrinterSystem*printer); //รับชนิดหมึกและจำนวนหมึกจากผู้ใช้
 
 int main()
@@ -87,17 +86,49 @@ int main()
             printf("Exiting Program. Goodbye!\n");
             break;
         case 1:
-            addPrintJob(&printer); // เรียกเมดทอดเพื่อรับค่าไฟล์
+            {
+            //รับค่าไฟล์ จำนวนหน้า และประเภทการพิมพ์ 
+            char file[MAX_FILENAME];
+            int page;
+            int typeChoice;
+            bool isColor;
+
+            printf("Enter file name: ");
+            scanf("%99s", file);
+
+            printf("Enter number of pages: ");
+            scanf("%d", &page);
+
+            printf("Select print type (1 = BW, 2 = COLOR): ");
+            scanf("%d", &typeChoice);
+
+            int ch;
+            while ((ch = getchar()) != '\n' && ch != EOF);
+
+            if (typeChoice != 1 && typeChoice != 2)
+            {
+                printf("Error: Invalid print type! Please select 1 (BW) or 2 (COLOR).\n");
+                break;
+            }
+
+                isColor = (typeChoice == 2);
+
+                enqueue(&printer, file, page, isColor);
+                break;
+                }
             break;
         case 2:
             dequeue(&printer);
             break;
         case 3:
-            // code here
             viewQueue(&printer);
             break;
         case 4:
-            // code here
+            int amount;
+
+            printf("Enter amount of paper to add: ");
+            scanf("%d", &amount);
+            addPaper(&printer, amount);
             break;
         case 5:
             refillInkMenu(&printer);
@@ -343,66 +374,6 @@ double calculatePrice(int page, bool isColor)
     {
         return page * BW_PRICE;
     }
-}
-
-//รับค่าไฟล์ จำนวนหน้า และประเภทการพิมพ์จากผู้ใช้ แล้ววนถามใหม่จนกว่าenqueue() จะคืนค่า true
-bool addPrintJob(PrinterSystem *printer)
-{
-    char file[MAX_FILENAME];
-    char pageInput[100];
-    char typeInput[100];
-    int page;
-    int typeChoice;
-    bool isColor;
-    bool added = false; // ใช้ค่าที่ enqueue() คืนกลับมาเป็นตัวควบคุมการวนลูป
- 
-    if (isFull(printer))
-    {
-        printf("Queue is full\n");
-        return false;
-    }
- 
-    do
-    {
-        printf("Enter file name: ");
-        fgets(file, sizeof(file), stdin);
-        // ตัด \n ท้ายชื่อไฟล์ออก
-        for (int i = 0; file[i] != '\0'; i++)
-        {
-            if (file[i] == '\n')
-            {
-                file[i] = '\0';
-                break;
-            }
-        }
- 
-        printf("Enter number of pages: ");
-        fgets(pageInput, sizeof(pageInput), stdin);
-        page = atoi(pageInput);
- 
-        printf("Select print type (1 = BW, 2 = COLOR): ");
-        fgets(typeInput, sizeof(typeInput), stdin);
-        typeChoice = atoi(typeInput);
- 
-        if (typeChoice != 1 && typeChoice != 2)
-        {
-            printf("Error: Invalid print type! Please select 1 (BW) or 2 (COLOR).\n");
-            printf("Please enter the job again.\n\n");
-            continue; // typeChoice ไม่ถูกต้อง วนกลับไปรับค่าใหม่ทันที
-        }
- 
-        isColor = (typeChoice == 2);
- 
-        added = enqueue(printer, file, page, isColor); // เรียกใช้ enqueue() 
- 
-        if (!added)
-        {
-            printf("Please enter the job again.\n\n");
-        }
- 
-    } while (!added);
- 
-    return true;
 }
 
 void refillInkMenu(PrinterSystem *printer)
