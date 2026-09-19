@@ -42,7 +42,7 @@ bool refillInk(PrinterSystem *printer, bool isColor, int amount);
 void viewPrinterStatus(const PrinterSystem *printer);
 void viewTotalIncome(const PrinterSystem *printer);
 bool addPrintJob(PrinterSystem *printer); //รับค่าไฟล์งานพิมพ์จากผู้ใช้ แล้วเรียก enqueue()
-
+void refillInkMenu(PrinterSystem*printer); //รับชนิดหมึกและจำนวนหมึกจากผู้ใช้
 int main()
 {
     PrinterSystem printer;
@@ -402,4 +402,21 @@ bool addPrintJob(PrinterSystem *printer)
     } while (!added);
  
     return true;
+}
+
+// รับชนิดและจำนวนหมึกจากผู้ใช้ แล้วเรียก refillInk() เพื่อเติมหมึก
+void refillInkMenu(PrinterSystem *printer)
+{
+    int type;
+    int amount;
+
+    printf("1. Black Ink\n");
+    printf("2. Color Ink\n");
+    printf("Select type: ");
+    scanf("%d", &type);
+
+    printf("Enter ink amount: ");
+    scanf("%d", &amount);
+
+    refillInk(printer, type == 2, amount);
 }
