@@ -87,36 +87,38 @@ int main()
             break;
         case 1:
             {
-            //รับค่าไฟล์ จำนวนหน้า และประเภทการพิมพ์ 
             char file[MAX_FILENAME];
             int page;
             int typeChoice;
             bool isColor;
-
-            printf("Enter file name: ");
-            scanf("%99s", file);
-
-            printf("Enter number of pages: ");
-            scanf("%d", &page);
-
-            printf("Select print type (1 = BW, 2 = COLOR): ");
-            scanf("%d", &typeChoice);
-
             int ch;
-            while ((ch = getchar()) != '\n' && ch != EOF);
-
+ 
+            printf("Enter file name: ");
+            scanf("%99s", file); 
+ 
+            printf("Enter number of pages: ");
+            if (scanf("%d", &page) != 1) 
+            {
+                printf("Error: Invalid number of pages!\n");
+                while ((ch = getchar()) != '\n' && ch != EOF);
+                break;
+            }
+            printf("Select print type (1 = BW, 2 = COLOR): ");
+            if (scanf("%d", &typeChoice) != 1) 
+            {
+                printf("Error: Invalid print type! Please select 1 (BW) or 2 (COLOR).\n");
+                while ((ch = getchar()) != '\n' && ch != EOF);
+                break;
+            }
             if (typeChoice != 1 && typeChoice != 2)
             {
                 printf("Error: Invalid print type! Please select 1 (BW) or 2 (COLOR).\n");
                 break;
             }
-
-                isColor = (typeChoice == 2);
-
-                enqueue(&printer, file, page, isColor);
-                break;
-                }
+            isColor = (typeChoice == 2);
+            enqueue(&printer, file, page, isColor);
             break;
+        }
         case 2:
             dequeue(&printer);
             break;
@@ -126,16 +128,19 @@ int main()
         case 4:
             {
             int amount;
-
-            printf("Enter amount of paper to add: ");
-            scanf("%d", &amount);
-
-            // เคลียร์ \n ที่ค้างใน buffer เพื่อไม่ให้ fgets() ของเมนูหลักรอบถัดไปพัง
             int ch;
+ 
+            printf("Enter amount of paper to add: ");
+            if (scanf("%d", &amount) != 1)
+            {
+                printf("Error: Invalid paper amount!\n");
+                while ((ch = getchar()) != '\n' && ch != EOF);
+                break;
+            }
             while ((ch = getchar()) != '\n' && ch != EOF);
             addPaper(&printer, amount);
             break;
-}
+        }
         case 5:
             refillInkMenu(&printer);
             break;
