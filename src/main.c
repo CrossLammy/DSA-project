@@ -124,12 +124,18 @@ int main()
             viewQueue(&printer);
             break;
         case 4:
+            {
             int amount;
 
             printf("Enter amount of paper to add: ");
             scanf("%d", &amount);
+
+            // เคลียร์ \n ที่ค้างใน buffer เพื่อไม่ให้ fgets() ของเมนูหลักรอบถัดไปพัง
+            int ch;
+            while ((ch = getchar()) != '\n' && ch != EOF);
             addPaper(&printer, amount);
             break;
+}
         case 5:
             refillInkMenu(&printer);
             break;
