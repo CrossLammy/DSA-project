@@ -41,7 +41,9 @@ bool addPaper(PrinterSystem *printer, int amount);
 bool refillInk(PrinterSystem *printer, bool isColor, int amount);
 void viewPrinterStatus(const PrinterSystem *printer);
 void viewTotalIncome(const PrinterSystem *printer);
+
 bool addPrintJob(PrinterSystem *printer); //รับค่าไฟล์งานพิมพ์จากผู้ใช้ แล้วเรียก enqueue()
+bool addPaperJob(PrinterSystem *printer); // รับค่าจำนวนกระดาษจากผู้ใช้ แล้วเรียก addPaper() 
 
 int main()
 {
@@ -96,7 +98,7 @@ int main()
             viewQueue(&printer);
             break;
         case 4:
-            // code here
+            addPaperJob(&printer); // เรียกเมดทอดเพื่อรับค่าจำนวนกระดาษ
             break;
         case 5:
             // code here
@@ -397,6 +399,30 @@ bool addPrintJob(PrinterSystem *printer)
         if (!added)
         {
             printf("Please enter the job again.\n\n");
+        }
+ 
+    } while (!added);
+ 
+    return true;
+}
+// รับค่าจำนวนกระดาษจากผู้ใช้ แล้ววนถามใหม่จนกว่าaddPaper() จะคืนค่า true
+bool addPaperJob(PrinterSystem *printer)
+{
+    char amountInput[100];
+    int amount;
+    bool added = false; // ใช้ค่าที่ addPaper() คืนกลับมาเป็นตัวควบคุมการวนลูป
+ 
+    do
+    {
+        printf("Enter amount of paper to add: ");
+        fgets(amountInput, sizeof(amountInput), stdin);
+        amount = atoi(amountInput);
+ 
+        added = addPaper(printer, amount); // เรียกใช้ addPaper() 
+ 
+        if (!added)
+        {
+            printf("Please enter the amount again.\n\n");
         }
  
     } while (!added);
