@@ -394,7 +394,10 @@ void refillInkMenu(PrinterSystem *printer)
 
     printf("Enter ink amount: ");
     scanf("%d", &amount);
-
+    
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF);
+    
     refillInk(printer, type == 2, amount);
 }
 
