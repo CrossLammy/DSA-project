@@ -41,14 +41,9 @@ bool addPaper(PrinterSystem *printer, int amount);
 bool refillInk(PrinterSystem *printer, bool isColor, int amount);
 void viewPrinterStatus(const PrinterSystem *printer);
 void viewTotalIncome(const PrinterSystem *printer);
-
 bool addPrintJob(PrinterSystem *printer); //รับค่าไฟล์งานพิมพ์จากผู้ใช้ แล้วเรียก enqueue()
-<<<<<<< HEAD
 void refillInkMenu(PrinterSystem*printer); //รับชนิดหมึกและจำนวนหมึกจากผู้ใช้
-=======
-bool addPaperJob(PrinterSystem *printer); // รับค่าจำนวนกระดาษจากผู้ใช้ แล้วเรียก addPaper() 
 
->>>>>>> 976efe2b25e3e7d7355a9186aecc6ac233dcd560
 int main()
 {
     PrinterSystem printer;
@@ -102,10 +97,10 @@ int main()
             viewQueue(&printer);
             break;
         case 4:
-            addPaperJob(&printer); // เรียกเมดทอดเพื่อรับค่าจำนวนกระดาษ
+            // code here
             break;
         case 5:
-            // code here
+            refillInkMenu(&printer);
             break;
         case 6:
             // code here
@@ -409,9 +404,7 @@ bool addPrintJob(PrinterSystem *printer)
  
     return true;
 }
-<<<<<<< HEAD
 
-// รับชนิดและจำนวนหมึกจากผู้ใช้ แล้วเรียก refillInk() เพื่อเติมหมึก
 void refillInkMenu(PrinterSystem *printer)
 {
     int type;
@@ -426,29 +419,4 @@ void refillInkMenu(PrinterSystem *printer)
     scanf("%d", &amount);
 
     refillInk(printer, type == 2, amount);
-=======
-// รับค่าจำนวนกระดาษจากผู้ใช้ แล้ววนถามใหม่จนกว่าaddPaper() จะคืนค่า true
-bool addPaperJob(PrinterSystem *printer)
-{
-    char amountInput[100];
-    int amount;
-    bool added = false; // ใช้ค่าที่ addPaper() คืนกลับมาเป็นตัวควบคุมการวนลูป
- 
-    do
-    {
-        printf("Enter amount of paper to add: ");
-        fgets(amountInput, sizeof(amountInput), stdin);
-        amount = atoi(amountInput);
- 
-        added = addPaper(printer, amount); // เรียกใช้ addPaper() 
- 
-        if (!added)
-        {
-            printf("Please enter the amount again.\n\n");
-        }
- 
-    } while (!added);
- 
-    return true;
->>>>>>> 976efe2b25e3e7d7355a9186aecc6ac233dcd560
 }
