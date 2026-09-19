@@ -337,10 +337,10 @@ double calculatePrice(int page, bool isColor)
 {
     if (isColor)
     {
-        return page * BW_PRICE;
+        return page * COLOR_PRICE;
     }
     else
     {
-        return page * COLOR_PRICE;
+        return page * BW_PRICE;
     }
 }
