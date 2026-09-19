@@ -40,8 +40,8 @@ void viewQueue(const PrinterSystem *printer);
 bool addPaper(PrinterSystem *printer, int amount);
 bool refillInk(PrinterSystem *printer, bool isColor, int amount);
 void viewPrinterStatus(const PrinterSystem *printer);
-void viewTotalIncome(const PrinterSystem *printer);
-void refillInkMenu(PrinterSystem*printer); //รับชนิดหมึกและจำนวนหมึกจากผู้ใช้
+void refillInkMenu(PrinterSystem *printer); //รับชนิดหมึกและจำนวนหมึกจากผู้ใช้
+void viewTotalIncome(const PrinterSystem *printer);// แสดงรายได้รวม
 
 int main()
 {
@@ -137,7 +137,7 @@ int main()
             viewPrinterStatus(&printer);
             break;
         case 7:
-            // code here
+            viewTotalIncome(&printer);
             break;
 
         default:
@@ -193,7 +193,7 @@ bool enqueue(PrinterSystem *printer, const char file[], int page, bool isColor)
 
     if (page <= 0 || file[0] == '\0')
     {
-        printf("Invalid print jog\n");
+        printf("Invalid print job\n");
         return false;
     }
     if (isEmpty(printer))
@@ -401,4 +401,9 @@ void viewPrinterStatus(const PrinterSystem *printer)
     printf("Black ink amount: %d\n", printer->blackInkAmount);    // หมึกดำ
     printf("Color ink amount: %d\n", printer->colorInkAmount);    // หมึกสี
     printf("============================================================\n");
+}
+
+void viewTotalIncome(const PrinterSystem *printer)
+{
+    printf("Total Income: %.2f Baht\n", printer->totalIncome);
 }
