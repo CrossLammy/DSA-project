@@ -134,7 +134,7 @@ int main()
             refillInkMenu(&printer);
             break;
         case 6:
-            // code here
+            viewPrinterStatus(&printer);
             break;
         case 7:
             // code here
@@ -390,4 +390,15 @@ void refillInkMenu(PrinterSystem *printer)
     scanf("%d", &amount);
 
     refillInk(printer, type == 2, amount);
+}
+
+void viewPrinterStatus(const PrinterSystem *printer)
+{
+    printf("\n");
+    printf("===================== PRINTER STATUS =====================\n");
+    printf("Jobs in queue   : %d/%d\n", printer->count, MAX_SIZE); // จำนวนงานในคิว
+    printf("Paper amount    : %d\n", printer->paperAmount);       // จำนวนกระดาษ
+    printf("Black ink amount: %d\n", printer->blackInkAmount);    // หมึกดำ
+    printf("Color ink amount: %d\n", printer->colorInkAmount);    // หมึกสี
+    printf("============================================================\n");
 }
