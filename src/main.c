@@ -397,10 +397,6 @@ void refillInkMenu(PrinterSystem *printer)
     printf("Select type: ");
     scanf("%d", &type);
 
-    if (type != 1 && type != 2)
-    {
-        printf("Please select only 1 or 2.\n");
-
     printf("Enter ink amount: ");
     scanf("%d", &amount);
     
