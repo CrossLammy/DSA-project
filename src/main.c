@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <errno.h>
+#include <limits.h>
+#include <string.h>
 
 #define MAX_SIZE 10
 #define MAX_FILENAME 100
@@ -43,12 +47,65 @@ void viewPrinterStatus(const PrinterSystem *printer);
 void refillInkMenu(PrinterSystem *printer); //รับชนิดหมึกและจำนวนหมึกจากผู้ใช้
 void viewTotalIncome(const PrinterSystem *printer);// แสดงรายได้รวม
 
-int main()
+typedef enum
+{
+    INPUT_OK,
+    INPUT_INVALID,
+    INPUT_END
+} InputResult;
+
+// Consume the entire line, including invalid lines, so prompts stay in sync.
+static InputResult readLine(char *buffer, size_t capacity)
+{
+    size_t length = 0;
+    bool tooLong = false;
+    int ch;
+
+    while ((ch = getchar()) != '\n' && ch != EOF)
+    {
+        if (length + 1 < capacity)
+            buffer[length++] = (char)ch;
+        else
+            tooLong = true;
+        if (ch == '\0')
+            tooLong = true;
+    }
+    buffer[length] = '\0';
+    if (ferror(stdin) || (ch == EOF && length == 0 && !tooLong))
+        return INPUT_END;
+    if (tooLong)
+        return INPUT_INVALID;
+    if (length > 0 && buffer[length - 1] == '\r')
+        buffer[--length] = '\0';
+    return INPUT_OK;
+}
+
+static InputResult readInteger(int *value)
+{
+    char input[100];
+    InputResult result = readLine(input, sizeof(input));
+    if (result != INPUT_OK)
+        return result;
+
+    char *end;
+    errno = 0;
+    long parsed = strtol(input, &end, 10);
+    if (end == input || errno == ERANGE || parsed < INT_MIN || parsed > INT_MAX)
+        return INPUT_INVALID;
+    while (isspace((unsigned char)*end))
+        end++;
+    if (*end != '\0')
+        return INPUT_INVALID;
+
+    *value = (int)parsed;
+    return INPUT_OK;
+}
+
+int main(void)
 {
     PrinterSystem printer;
     initPrinterSystem(&printer);
     bool exit = true;
-    char input[100];
     int choice;
 
     while (exit)
@@ -67,15 +124,19 @@ int main()
             printf("===================================================\n");
             printf("Select Menu: ");
 
-            fgets(input, sizeof(input), stdin); // input string
-            choice = atoi(input);               // convert to number
-            if (choice >= 0 && choice <= 7)
+            InputResult result = readInteger(&choice);
+            if (result == INPUT_END)
+            {
+                printf("Input closed. Goodbye!\n");
+                return 0;
+            }
+            if (result == INPUT_OK && choice >= 0 && choice <= 7)
             {
                 break;
             }
             else
             {
-                printf("Error: Please enter numbers only!\n");
+                printf("Error: Please enter an integer from 0 to 7!\n");
             }
         }
 
@@ -91,26 +152,27 @@ int main()
             int page;
             int typeChoice;
             bool isColor;
-            int ch;
  
             printf("Enter file name: ");
-            scanf("%99s", file); 
+            if (readLine(file, sizeof(file)) != INPUT_OK ||
+                file[strspn(file, " \t\r\v\f")] == '\0')
+            {
+                printf("Error: Enter a non-empty file name of at most %d characters!\n", MAX_FILENAME - 1);
+                break;
+            }
  
             printf("Enter number of pages: ");
-            if (scanf("%d", &page) != 1)
+            if (readInteger(&page) != INPUT_OK || page <= 0)
             {
                 printf("Error: Invalid number of pages!\n");
-                while ((ch = getchar()) != '\n' && ch != EOF); 
                 break;
             }
             printf("Select print type (1 = BW, 2 = COLOR): ");
-            if (scanf("%d", &typeChoice) != 1) 
+            if (readInteger(&typeChoice) != INPUT_OK)
             {
                 printf("Error: Invalid print type! Please select 1 (BW) or 2 (COLOR).\n");
-                while ((ch = getchar()) != '\n' && ch != EOF); 
                 break;
             }
-            while ((ch = getchar()) != '\n' && ch != EOF);
             if (typeChoice != 1 && typeChoice != 2)
             {
                 printf("Error: Invalid print type! Please select 1 (BW) or 2 (COLOR).\n");
@@ -131,16 +193,13 @@ int main()
         case 4:
             {
             int amount;
-            int ch;
  
             printf("Enter amount of paper to add: ");
-            if (scanf("%d", &amount) != 1)
+            if (readInteger(&amount) != INPUT_OK)
             {
                 printf("Error: Invalid paper amount!\n");
-                while ((ch = getchar()) != '\n' && ch != EOF);
                 break;
             }
-            while ((ch = getchar()) != '\n' && ch != EOF);
             addPaper(&printer, amount);
             break;
         }
@@ -344,6 +403,11 @@ bool addPaper(PrinterSystem *printer, int amount)
         return false;
     }
 
+    if (amount > INT_MAX - printer->paperAmount)
+    {
+        printf("Error: Paper amount exceeds the supported limit.\n");
+        return false;
+    }
     printer->paperAmount += amount;
 
     printf("Added %d paper(s) successfully.\n", amount);
@@ -358,6 +422,13 @@ bool refillInk(PrinterSystem *printer, bool isColor, int amount)
     if (amount <= 0)
     {
         printf("Invalid ink amount.\n");
+        return false;
+    }
+
+    int currentAmount = isColor ? printer->colorInkAmount : printer->blackInkAmount;
+    if (amount > INT_MAX - currentAmount)
+    {
+        printf("Error: Ink amount exceeds the supported limit.\n");
         return false;
     }
 
@@ -394,14 +465,11 @@ void refillInkMenu(PrinterSystem *printer)
 {
     int type;
     int amount;
-    char input[100];
-
     printf("1. Black Ink\n");
     printf("2. Color Ink\n");
     printf("Select type: ");
-    fgets(input, sizeof(input), stdin);
 
-    if (sscanf(input, "%d", &type) != 1)
+    if (readInteger(&type) != INPUT_OK)
     {
         printf("Please select only 1 or 2.\n");
         return;
@@ -414,9 +482,8 @@ void refillInkMenu(PrinterSystem *printer)
     }
 
     printf("Enter ink amount: ");
-    fgets(input, sizeof(input), stdin);
 
-    if (sscanf(input, "%d", &amount) != 1)
+    if (readInteger(&amount) != INPUT_OK)
     {
         printf("Please enter numbers only.\n");
         return;
