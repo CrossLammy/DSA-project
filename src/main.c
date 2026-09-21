@@ -391,27 +391,39 @@ void refillInkMenu(PrinterSystem *printer)
 {
     int type;
     int amount;
+    char input[100];
 
     printf("1. Black Ink\n");
     printf("2. Color Ink\n");
     printf("Select type: ");
-    scanf("%d", &type);
+    fgets(input, sizeof(input), stdin);
+
+    if (sscanf(input, "%d", &type) != 1)
+    {
+        printf("Please select only 1 or 2.\n");
+        return;
+    }
 
     if (type != 1 && type != 2)
     {
         printf("Please select only 1 or 2.\n");
-
-        int ch;
-        while ((ch = getchar()) != '\n' && ch != EOF);
-
         return;
     }
 
     printf("Enter ink amount: ");
-    scanf("%d", &amount);
+    fgets(input, sizeof(input), stdin);
 
-    int ch;
-    while ((ch = getchar()) != '\n' && ch != EOF);
+    if (sscanf(input, "%d", &amount) != 1)
+    {
+        printf("Please enter numbers only.\n");
+        return;
+    }
+
+    if (amount <= 0)
+    {
+        printf("Invalid ink amount.\n");
+        return;
+    }
 
     refillInk(printer, type == 2, amount);
 }
