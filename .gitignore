@@ -11,3 +11,4 @@ bin/
 # VS Code & IDE settings
 .vscode/
 .idea/
+src/main
