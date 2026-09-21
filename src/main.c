@@ -97,25 +97,28 @@ int main()
             scanf("%99s", file); 
  
             printf("Enter number of pages: ");
-            if (scanf("%d", &page) != 1) 
+            if (scanf("%d", &page) != 1)
             {
                 printf("Error: Invalid number of pages!\n");
-                while ((ch = getchar()) != '\n' && ch != EOF);
+                while ((ch = getchar()) != '\n' && ch != EOF); 
                 break;
             }
             printf("Select print type (1 = BW, 2 = COLOR): ");
             if (scanf("%d", &typeChoice) != 1) 
             {
                 printf("Error: Invalid print type! Please select 1 (BW) or 2 (COLOR).\n");
-                while ((ch = getchar()) != '\n' && ch != EOF);
+                while ((ch = getchar()) != '\n' && ch != EOF); 
                 break;
             }
+            while ((ch = getchar()) != '\n' && ch != EOF);
             if (typeChoice != 1 && typeChoice != 2)
             {
                 printf("Error: Invalid print type! Please select 1 (BW) or 2 (COLOR).\n");
                 break;
             }
+ 
             isColor = (typeChoice == 2);
+ 
             enqueue(&printer, file, page, isColor);
             break;
         }
