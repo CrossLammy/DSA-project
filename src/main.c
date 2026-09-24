@@ -8,6 +8,7 @@
 
 #define MAX_SIZE 10
 #define MAX_FILENAME 100
+#define MAX_INK_AMOUNT 100
 #define BW_PRICE 1.0
 #define COLOR_PRICE 5.0
 
@@ -42,9 +43,9 @@ bool dequeue(PrinterSystem *printer);
 void viewQueue(const PrinterSystem *printer);
 
 bool addPaper(PrinterSystem *printer, int amount);
-bool refillInk(PrinterSystem *printer, bool isColor, int amount);
+bool refillInk(PrinterSystem *printer, bool isColor);
 void viewPrinterStatus(const PrinterSystem *printer);
-void refillInkMenu(PrinterSystem *printer); //รับชนิดหมึกและจำนวนหมึกจากผู้ใช้
+void refillInkMenu(PrinterSystem *printer); // รับชนิดหมึกจากผู้ใช้แล้วเติมให้เต็ม
 void viewTotalIncome(const PrinterSystem *printer);// แสดงรายได้รวม
 
 typedef enum
@@ -227,8 +228,8 @@ void initPrinterSystem(PrinterSystem *printer)
     printer->rear = 0;
     printer->count = 0;
     printer->paperAmount = 100;
-    printer->blackInkAmount = 100;
-    printer->colorInkAmount = 100;
+    printer->blackInkAmount = MAX_INK_AMOUNT;
+    printer->colorInkAmount = MAX_INK_AMOUNT;
     printer->totalIncome = 0;
 }
 
@@ -416,32 +417,19 @@ bool addPaper(PrinterSystem *printer, int amount)
     return true;
 }
 
-// เติมหมึกดำและหมึกสี
-bool refillInk(PrinterSystem *printer, bool isColor, int amount)
+// เติมหมึกที่เลือกให้เต็ม
+bool refillInk(PrinterSystem *printer, bool isColor)
 {
-    if (amount <= 0)
-    {
-        printf("Invalid ink amount.\n");
-        return false;
-    }
-
-    int currentAmount = isColor ? printer->colorInkAmount : printer->blackInkAmount;
-    if (amount > INT_MAX - currentAmount)
-    {
-        printf("Error: Ink amount exceeds the supported limit.\n");
-        return false;
-    }
-
     if (isColor)
     {
-        printer->colorInkAmount += amount;
-        printf("Added %d color ink successfully.\n", amount);
+        printer->colorInkAmount = MAX_INK_AMOUNT;
+        printf("Color ink refilled to full successfully.\n");
         printf("Current color ink amount: %d\n", printer->colorInkAmount);
     }
     else
     {
-        printer->blackInkAmount += amount;
-        printf("Added %d black ink successfully.\n", amount);
+        printer->blackInkAmount = MAX_INK_AMOUNT;
+        printf("Black ink refilled to full successfully.\n");
         printf("Current black ink amount: %d\n", printer->blackInkAmount);
     }
 
@@ -464,7 +452,6 @@ double calculatePrice(int page, bool isColor)
 void refillInkMenu(PrinterSystem *printer)
 {
     int type;
-    int amount;
     printf("1. Black Ink\n");
     printf("2. Color Ink\n");
     printf("Select type: ");
@@ -481,21 +468,7 @@ void refillInkMenu(PrinterSystem *printer)
         return;
     }
 
-    printf("Enter ink amount: ");
-
-    if (readInteger(&amount) != INPUT_OK)
-    {
-        printf("Please enter numbers only.\n");
-        return;
-    }
-
-    if (amount <= 0)
-    {
-        printf("Invalid ink amount.\n");
-        return;
-    }
-
-    refillInk(printer, type == 2, amount);
+    refillInk(printer, type == 2);
 }
 
 void viewPrinterStatus(const PrinterSystem *printer)
